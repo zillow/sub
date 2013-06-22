@@ -1,94 +1,74 @@
 #!/usr/bin/env bash
-set -e
+# to instantiate with this, add:
+# tmp=`pwd`; # cd SUB_PATH/ && . sub-init2 && cd $tmp
+# to your bashrc
 
-print=""
-if [ "$1" = "-" ]; then
-  print=1
-  shift
-fi
-
-shell="$1"
-if [ -z "$shell" ]; then
-  shell="$(basename "$SHELL")"
-fi
-
-resolve_link() {
-  $(type -p greadlink readlink | head -1) $1
+_sub_resolve_link() {
+  $(type -p greadlink readlink | head -1) "$1"
 }
 
-abs_dirname() {
+_sub_abs_dirname() {
   local cwd="$(pwd)"
   local path="$1"
-
+  
   while [ -n "$path" ]; do
     cd "${path%/*}"
     local name="${path##*/}"
-    path="$(resolve_link "$name" || true)"
+    path="$(_sub_resolve_link "$name" || true)"
   done
 
   pwd
   cd "$cwd"
 }
 
-root="$(abs_dirname "$0")/.."
-
-if [ -z "$print" ]; then
-  case "$shell" in
-  bash )
-    profile='~/.bash_profile'
-    ;;
-  zsh )
-    profile='~/.zshenv'
-    ;;
-  * )
-    profile='your profile'
-    ;;
-  esac
-
-  { echo "# Load sub automatically by adding"
-    echo "# the following to ${profile}:"
-    echo
-    echo "eval \"\$(${_SUB_ROOT}/bin/sub init -)\""
-    echo
-  } >&2
-
-  exit 1
-fi
-
-echo "export PATH=\"\${PATH}:${_SUB_ROOT}/bin\""
-
-case "$shell" in
-bash | zsh )
-  echo "source \"$root/completions/sub.${shell}\""
-  ;;
-esac
-
-commands=(`sub commands --sh`)
-IFS="|"
-cat <<EOS
-_sub_wrapper() {
-  local command="\$1"
-  if [ "\$#" -gt 0 ]; then
-    shift
+_sub_source() {
+  local out=`grep $'#[ \t]*SOURCE' $1`
+  if [ "$out" == "" ]; then
+    echo "0"
+    return
   fi
-
-  case "\$command" in
-  ${commands[*]})
-    eval \`sub "sh-\$command" "\$@"\`;;
-  *)
-    command sub "\$command" "\$@";;
-  esac
+  echo "1"
 }
-EOS
 
-# zsh can't pass argument with aliases, but bash can.
-# zsh can have functions with the name being only numbers, but bash can't.
-# fix both cases here by letting zsh have a function, and bash have its alias.
-case "$shell" in
-bash )
-  echo "alias sub=_sub_wrapper"
+export SUB_PATH=`pwd`
+
+case "$0" in
+bash | zsh)
+  source ../completions/sub.$0
   ;;
-zsh )
-  echo "sub=_sub_wrapper"
+-bash )
+  source ../completions/sub.bash
   ;;
 esac
+
+function sub() {
+    local original_path=$PATH
+    local source_command=0
+    export PATH="$SUB_PATH:$PATH"
+
+    libexec_path=$SUB_PATH
+
+    command="$1"
+    case "$command" in
+    "" | "-h" | "--help" )
+      sub-help
+      ;;
+    * )
+      command_path="$(command -v "sub-$command" || true)"
+      if [ ! -x "$command_path" ]; then
+        echo "sub: no such command \`$command'"
+      else
+          source_command=$(_sub_source $command_path)
+          shift
+          if [[ "$1" -eq "--complete" ]]; then
+              $command_path "$@"
+          elif [[ "$source_command" -eq 0 ]]; then
+              $command_path "$@"
+          else 
+              . $command_path "$@"
+          fi
+      fi
+      ;;
+    esac
+    export PATH=$original_path
+}
