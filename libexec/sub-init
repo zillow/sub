@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SOURCE
 # to instantiate with this, add:
 # tmp=`pwd`; # cd SUB_PATH/ && . sub-init2 && cd $tmp
 # to your bashrc

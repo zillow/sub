@@ -15,9 +15,8 @@ Here's some quick examples:
 Each subcommand maps to a separate, standalone executable program. Sub programs are laid out like so:
 
     .
-    ├── bin               # contains the main executable for your program
     ├── completions       # (optional) bash/zsh completions
-    ├── libexec           # where the subcommand executables are
+    ├── libexec           # where the main and subcommand executables are
     └── share             # static data storage
 
 ## Subcommands
@@ -142,6 +141,36 @@ Passing the `--complete` flag to this subcommand short circuits the real command
 
 Run the `init` subcommand after you've prepared your sub to get your sub loading automatically in your shell.
 
+## Sourcing commands
+
+Sometimes, you want to source a command instead of executing it in a
+subshell. This happen in cases like you want to set environment
+variables, or navigate to a directory.
+
+You can tell sub to source environments by adding a SOURCE comment in your script:
+
+    # SOURCE
+
+So if you wanted to create something that navigated you workspace:
+
+``` bash
+#!/usr/bin/env bash
+# SOURCE
+# Usage: sub w {directoryname}
+# Summary: A quick way to navigate to a folder inside your "workspace" location. 
+
+if [ ! -d ~/workspace ]; then
+    mkdir -p ~/workspace
+fi
+
+# provide sub completions
+if [ "$1" == "--complete" ]; then  
+    ls ~/workspace
+    exit
+fi
+cd ~/workspace/$1
+```
+
 ## Shortcuts
 
 Creating shortcuts for commands is easy, just symlink the shorter version you'd like to run inside of your `libexec` directory.
@@ -172,12 +201,12 @@ So you've prepared your own sub, now how do you use it? Here's one way you could
 
 For bash users:
 
-    echo 'eval "$($HOME/.sub/bin/sub init -)"' >> ~/.bash_profile
+    echo 'temp=`pwd`; cd $HOME/.sub/libexec && . sub-init && cd $tmp' >> ~/.bash_profile
     exec bash
 
 For zsh users:
 
-    echo 'eval "$($HOME/.sub/bin/sub init -)"' >> ~/.zshenv
+    echo 'temp=`pwd`; cd $HOME/.sub/libexec && . sub-init && cd $tmp' >> ~/.zshenv
     source ~/.zshenv
 
 You could also install your sub in a different directory, say `/usr/local`. This is just one way you could provide a way to install your sub.
