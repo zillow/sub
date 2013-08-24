@@ -15,9 +15,8 @@ Here's some quick examples:
 Each subcommand maps to a separate, standalone executable program. Sub programs are laid out like so:
 
     .
-    ├── bin               # contains the main executable for your program
     ├── completions       # (optional) bash/zsh completions
-    ├── libexec           # where the subcommand executables are
+    ├── libexec           # where the main and subcommand executables are
     └── share             # static data storage
 
 ## Subcommands
@@ -141,6 +140,36 @@ fi
 Passing the `--complete` flag to this subcommand short circuits the real command, and then runs another subcommand instead. The output from your subcommand's `--complete` run is sent to your shell's autocompletion handler for you, and you don't ever have to once worry about how any of that works!
 
 Run the `init` subcommand after you've prepared your sub to get your sub loading automatically in your shell.
+
+## Sourcing commands
+
+Sometimes, you want to source a command instead of executing it in a
+subshell. This happen in cases like you want to set environment
+variables, or navigate to a directory.
+
+You can tell sub to source environments by adding a SOURCE comment in your script:
+
+    # SOURCE
+
+So if you wanted to create something that navigated you workspace:
+
+``` bash
+#!/usr/bin/env bash
+# SOURCE
+# Usage: sub w {directoryname}
+# Summary: A quick way to navigate to a folder inside your "workspace" location. 
+
+if [ ! -d ~/workspace ]; then
+    mkdir -p ~/workspace
+fi
+
+# provide sub completions
+if [ "$1" == "--complete" ]; then  
+    ls ~/workspace
+    exit
+fi
+cd ~/workspace/$1
+```
 
 ## Shortcuts
 
