@@ -19,25 +19,44 @@ abs_dirname() {
   cd "$cwd"
 }
 
+_sub_source() {
+  local out=`grep $'#[ \t]*SOURCE' $1`
+  if [ "$out" == "" ]; then
+    echo "0"
+    return
+  fi
+  echo "1"
+}
+
+
+#export _SUB_ROOT="$(abs_dirname "$libexec_path")"
+#export PATH="${libexec_path}:$PATH"
+
+export _original_path=$PATH
+source_command=0
 libexec_path="$(abs_dirname "$0")"
-export _SUB_ROOT="$(abs_dirname "$libexec_path")"
-export PATH="${libexec_path}:$PATH"
+export PATH="$libexec_path:$PATH"
 
 command="$1"
 case "$command" in
 "" | "-h" | "--help" )
-  exec sub-help
+  sub-help
   ;;
 * )
   command_path="$(command -v "sub-$command" || true)"
   if [ ! -x "$command_path" ]; then
-    echo "sub: no such command \`$command'" >&2
-    exit 1
+    echo "sub: no such command '$command'"
+  else
+      source_command=$(_sub_source $command_path)
+      shift
+      if [[ "$1" == '--complete' ]]; then
+          $command_path "$@"
+      elif [[ "$source_command" -eq 0 ]]; then
+          $command_path "$@"
+      else 
+          . $command_path "$@"
+      fi
   fi
-
-  shift
-  echo $command_path
-  echo $@
-  exec "$command_path" "$@"
   ;;
 esac
+export PATH=$original_path

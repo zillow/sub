@@ -201,12 +201,12 @@ So you've prepared your own sub, now how do you use it? Here's one way you could
 
 For bash users:
 
-    echo 'eval "$($HOME/.sub/bin/sub init -)"' >> ~/.bash_profile
+    echo 'temp=`pwd`; cd $HOME/.sub/libexec && . sub-init && cd $tmp' >> ~/.bash_profile
     exec bash
 
 For zsh users:
 
-    echo 'eval "$($HOME/.sub/bin/sub init -)"' >> ~/.zshenv
+    echo 'temp=`pwd`; cd $HOME/.sub/libexec && . sub-init && cd $tmp' >> ~/.zshenv
     source ~/.zshenv
 
 You could also install your sub in a different directory, say `/usr/local`. This is just one way you could provide a way to install your sub.
