@@ -29,13 +29,13 @@ _sub_source() {
 }
 
 
-#export _SUB_ROOT="$(abs_dirname "$libexec_path")"
-#export PATH="${libexec_path}:$PATH"
-
 export _original_path=$PATH
 source_command=0
 libexec_path="$(abs_dirname "$0")"
 export PATH="$libexec_path:$PATH"
+
+#export _SUB_ROOT="$(abs_dirname "$libexec_path")"
+
 
 command="$1"
 case "$command" in
