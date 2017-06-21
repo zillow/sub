@@ -54,7 +54,7 @@ You get a few commands that come with your sub:
 * `init`: Shows how to load your sub with autocompletions, based on your shell.
 * `shell`: Helps with calling subcommands that might be named the same as builtin/executables.
 
-If you ever need to reference files inside of your sub's installation, say to access a file in the `share` directory, your sub exposes the directory path in the environment, based on your sub name. For a sub named `rush`, the variable name will be `_RUSH_ROOT`.
+If you ever need to reference files inside of your sub's installation, say to access a file in the `share` directory, your sub exposes the directory path in the environment, based on your sub name. For a sub named `rush-cli`, the variable name will be `_RUSH_CLI_ROOT`.  
 
 Here's an example subcommand you could drop into your `libexec` directory to show this in action: (make sure to correct the name!)
 
@@ -62,7 +62,7 @@ Here's an example subcommand you could drop into your `libexec` directory to sho
 #!/usr/bin/env bash
 set -e
 
-echo $_RUSH_ROOT
+echo $_RUSH_CLI_ROOT
 ```
 
 You can also use this environment variable to call other commands inside of your `libexec` directly. Composition of this type very much encourages reuse of small scripts, and keeps scripts doing *one* thing simply.
